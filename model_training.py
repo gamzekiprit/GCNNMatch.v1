@@ -1,7 +1,7 @@
 from torch_geometric.nn import MetaLayer, DataParallel
 from utils import * 
 from network.complete_net import *
-from torch_geometric.data import DataLoader, DataListLoader
+from torch_geometric.data import DataLoader
 from accuracy import *
 import matplotlib.pyplot as plt
 import logging
@@ -13,11 +13,10 @@ def model_training(data_list_train, data_list_test, epochs, acc_epoch, acc_epoch
     #logging
     logging.basicConfig(level=logging.DEBUG, filename='./logfiles/'+logfilename, filemode="w+",
                         format="%(message)s")
-    trainloader = DataListLoader(data_list_train, batch_size=batchsize, shuffle=True)
-    testloader = DataListLoader(data_list_test, batch_size=batchsize, shuffle=True)
+    trainloader = DataLoader(data_list_train, batch_size=batchsize, shuffle=True)
+    testloader = DataLoader(data_list_test, batch_size=batchsize, shuffle=True)
     device = torch.device('cuda')
     complete_net = completeNet()
-    complete_net = DataParallel(complete_net)
     complete_net = complete_net.to(device)
     
     #train parameters
@@ -45,6 +44,7 @@ def model_training(data_list_train, data_list_test, epochs, acc_epoch, acc_epoch
         running_loss= 0
         batches_num=0         
         for batch in trainloader:
+            batch.to(device)
             batch_total=0
             batch_total_ones= 0
             batch_total_zeros= 0
@@ -131,6 +131,7 @@ def model_training(data_list_train, data_list_test, epochs, acc_epoch, acc_epoch
                 running_loss= 0
                 batches_num=0
                 for batch in testloader:
+                    batch.to(device)
                     batch_total=0
                     batch_total_ones= 0
                     batch_total_zeros= 0

@@ -7,11 +7,11 @@ class EncoderCNN(nn.Module):
     def __init__(self, embed_size=512):
         super(EncoderCNN, self).__init__()
         # get the pretrained densenet model
-        #initial_cnn = models.densenet161(pretrained=True)
-        initial_cnn = models.resnet18(pretrained=True)
+        initial_cnn = models.densenet121(pretrained=True)
+        # initial_cnn = models.resnet18(pretrained=True)
         self.cnn = torch.nn.Sequential(*(list(initial_cnn.children())[:-1]))
         # Freeze model weights
-        print(self.cnn.parameters())
+        #print(self.cnn.parameters())
 
         for param in self.cnn.parameters():
             param.requires_grad = True

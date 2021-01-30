@@ -61,17 +61,20 @@ def sinkhorn(matrix):
     desired_col_sums = torch.ones((1, col_len), requires_grad=False).cuda()
     desired_row_sums[:, -1] = col_len-1
     desired_col_sums[:, -1] = row_len-1
+    #print(matrix.size(0))
+    #print(matrix.size(1))
+    #print(matrix.size())
     for _ in range(8):
-        #row normalization
+        # row normalization
         actual_row_sum = torch.sum(matrix, axis=1)
         for i, row in enumerate(matrix):
             for j, element in enumerate(row):
-                matrix[i,j]= element*desired_row_sums[0,i]/(actual_row_sum[i])
-        #column normalization
+                matrix[i, j] = element * desired_row_sums[0, i] / (actual_row_sum[i])
+        # column normalization
         actual_col_sum = torch.sum(matrix, axis=0)
         for i, row in enumerate(matrix):
             for j, element in enumerate(row):
-                matrix[i,j]= element*desired_col_sums[0,j]/(actual_col_sum[j])
+                matrix[i, j] = element * desired_col_sums[0, j] / (actual_col_sum[j])
     return matrix
 
 

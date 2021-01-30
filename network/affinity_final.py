@@ -16,7 +16,7 @@ class affinity_finalNet(torch.nn.Module):
         # u: [B, F_u], where B is the number of graphs.
         # batch: [E] with max entry B - 1.
         # out = torch.cat([x1, x2, x3], 0)
-        print("Shape of input: " + str(inputs.shape))
+        #print("Shape of input: " + str(inputs.shape))
         out = self.mlp(inputs)
-        print("Shape of outpus: " + str(out.shape))
+        #print("Shape of outpus: " + str(out.shape))
         return out

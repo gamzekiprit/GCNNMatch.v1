@@ -16,5 +16,5 @@ class affinity_geomNet(torch.nn.Module):
         # u: [B, F_u], where B is the number of graphs.
         # batch: [E] with max entry B - 1.
         # out = torch.cat([x1, x2, x3], 0)
-        print("Input of affinity geo: " + str(inputs.shape))
+        #print("Input of affinity geo: " + str(inputs.shape))
         return self.mlp(inputs)

@@ -21,12 +21,12 @@ class optimNet(nn.Module):
     def similarity1(self, node_embedding, edge_index):
         edge_attr = []
         for i in range(len(edge_index[0])):
-            print("input mlp1:" + str(torch.cat((node_embedding[edge_index[0][i]], node_embedding[edge_index[1][i]]), 0).shape))
+            #print("input mlp1:" + str(torch.cat((node_embedding[edge_index[0][i]], node_embedding[edge_index[1][i]]), 0).shape))
             x1 = self.mlp1(torch.cat((node_embedding[edge_index[0][i]], node_embedding[edge_index[1][i]]), 0))
-            print("output mlp1")
+            #print("output mlp1")
             edge_attr.append(x1.reshape(1))
         edge_attr = torch.stack(edge_attr)
-        print("end of for")
+        #print("end of for")
         return edge_attr
     def forward(self, node_attr, edge_attr, edge_index, coords, frame):
         node_embedding= node_attr

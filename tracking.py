@@ -2,27 +2,28 @@ from data_preparation_train import *
 from model_training import *
 from model_testing import *
 from network.complete_net import *
-from torch_geometric.nn import DataParallel
 from utils import *
 import os
 import pickle
 import argparse
-import pprint
+import cv2
 
-data_path = "data"
+data_path = "/usr/home/her/dt/tracking/single-camera/mot"
 
 
 def get_data(info, set):
     if set == 'training':
-        detections = np.loadtxt(data_path + "/MOT17/train/MOT17-{}-{}/gt/gt.txt".format(info[0], info[1]), delimiter=',')
+        detections = np.loadtxt(data_path + "/MOT17/train/MOT17-{}-{}/gt/gt.txt".format(info[0], info[1]),
+                                delimiter=',')
         images_path = data_path + "/MOT17/train/MOT17-{}-{}/img1".format(info[0], info[1])
-        #detections = np.loadtxt(data_path + "/MOT1720/train/MOT20-{}-{}/gt/gt.txt".format(info[0], info[1]),  delimiter=',')
-        #images_path = data_path + "/MOT1720/train/MOT20-{}-{}/img1".format(info[0], info[1])
+        # detections = np.loadtxt(data_path + "/MOT1720/train/MOT20-{}-{}/gt/gt.txt".format(info[0], info[1]),  delimiter=',')
+        # images_path = data_path + "/MOT1720/train/MOT20-{}-{}/img1".format(info[0], info[1])
     elif set == 'testing':
-        detections = np.loadtxt(data_path + "/MOT17/test/MOT17-{}-{}/det/det.txt".format(info[0], info[1]), delimiter=',')
+        detections = np.loadtxt(data_path + "/MOT17/test/MOT17-{}-{}/det/det.txt".format(info[0], info[1]),
+                                delimiter=',')
         images_path = data_path + "/MOT17/test/MOT17-{}-{}/img1".format(info[0], info[1])
-        #detections = np.loadtxt(data_path + "/MOT1720/test/MOT17-{}-{}/det/det.txt".format(info[0], info[1]), delimiter=',')
-        #images_path = data_path + "/MOT1720/test/MOT17-{}-{}/img1".format(info[0], info[1])
+        # detections = np.loadtxt(data_path + "/MOT1720/test/MOT17-{}-{}/det/det.txt".format(info[0], info[1]), delimiter=',')
+        # images_path = data_path + "/MOT1720/test/MOT17-{}-{}/img1".format(info[0], info[1])
     return detections, images_path
 
 
@@ -35,74 +36,76 @@ if __name__ == "__main__":
 
         # initialize training settings
         batchsize = 2  # specify how many graphs to use at each batch
-        epochs = 4  # at how many epochs to stop
-        load_checkpoint = None # None or specify .pth file to continue training
-        validation_epochs = 4  # epoch interval for validation
-        acc_epoch = epochs  # at which epoch to calculate training accuracy
-        acc_epoch2 = epochs  # at which epoch to calculate validation accuracy
+        epochs = 10  # at how many epochs to stop
+        load_checkpoint = None  # None or specify .pth file to continue training
+        validation_epochs = 2  # epoch interval for validation
+        acc_epoch = 2  # at which epoch to calculate training accuracy
+        acc_epoch2 = 2  # at which epoch to calculate validation accuracy
         save_model_epochs = 1  # epoch interval to save the model
         most_recent_frame_back = 30  # for more challenging training, specify most recent frame of tracklets to match new detections with, a max value is specified here
         # so later it will be randomly between 1 and most_recent_frame_back, min value=1 -> take only previous frame
         frames_look_back = 30  # a second limit that is used to use tracklets for matching in frames between frames_look_back and most_recent_frame_back,
         # min value=1 -> take only previous frame
         # example: if current frame= 60, tracklets used randomly from t1= 30 to 59, also tracklets used till t1-30
-        graph_jump = 500  # how many frames to move the current frame forward, min value=1 -> move to the next frame
+        graph_jump = 5  # how many frames to move the current frame forward, min value=1 -> move to the next frame
         distance_limit = 250  # objects within that pixel distance can be associated
 
         # MOT17 specific settings
-        train_seq = ["02", "04", "05", "09", "10", "11", "13"]  # names of videos
-        #train_seq = ["01"]  # names of videos
-        valid_seq = ["02", "04", "05", "09", "10", "11", "13"]  # names of videos
-        #valid_seq = ["01"]  # names of videos
+        train_seq = ["02"]  # , "04", "05", "09", "10", "11", "13"]  # names of videos
+        # train_seq = ["01"]  # names of videos
+        valid_seq = ["04"]  # names of videos
+        # valid_seq = ["01"]  # names of videos
         fps = [30, 30, 14, 30, 30, 30, 25]  # specify fps of each video
-        #fps = [25, 25, 25]  # specify fps of each video
+        # fps = [25, 25, 25]  # specify fps of each video
         current_frame_train = 2  # use as first current frame the second frame of each video
-        total_frames = [None, None, None, None, None, None, None]  # total frames of each video loaded, None for max frames
-        #total_frames = [None, None, None]  # total frames of each video loaded, None for max frames
+        total_frames = [None, None, None, None, None, None,
+                        None]  # total frames of each video loaded, None for max frames
+        # total_frames = [None, None, None]  # total frames of each video loaded, None for max frames
         current_frame_valid = [500, 900, 780, 450, 550, 800, 650]  # up to which frame of each video to use for training
-        #current_frame_valid = [340]  # up to which frame of each video to use for training
+        # current_frame_valid = [340]  # up to which frame of each video to use for training
         detector = ["FRCNN"]  # specify a detector just to direct to one of the MOT folders
 
         # Option 1: If graph data not built, loop through sequence and get training data
-        print('\n')
-        print('Training Data')
-        data_list_train = []
-        for s in range(len(train_seq)):
-            for d in range(len(detector)):
-                print('Sequence: ' + train_seq[s])
-                detections, images_path = get_data([train_seq[s], detector[d]], "training")
-                list = data_prep_train(train_seq[s], detections, images_path, frames_look_back, total_frames[s],
-                                       most_recent_frame_back,
-                                       graph_jump, current_frame_train, current_frame_valid[s], distance_limit, fps[s],
-                                       "training")
-                data_list_train = data_list_train + list
-        with open('./data/data_train.data', 'wb') as filehandle:
-            pickle.dump(data_list_train, filehandle)
-        print("Saved to pickle file \n")
-        print('Validation Data')
-        data_list_valid = []
-        for s in range(len(valid_seq)):
-            for d in range(len(detector)):
-                print('Sequence: ' + valid_seq[s])
-                detections, images_path = get_data([valid_seq[s], detector[d]], "training")
-                list = data_prep_train(valid_seq[s], detections, images_path, frames_look_back, total_frames[s],
-                                       most_recent_frame_back,
-                                       graph_jump, current_frame_train, current_frame_valid[s], distance_limit, fps[s],
-                                       "validation")
-                data_list_valid = data_list_valid + list
-        with open('./data/data_valid.data', 'wb') as filehandle:
-            pickle.dump(data_list_valid, filehandle)
-        print("Saved to pickle file \n")
+        # print('\n')
+        # print('Training Data')
+        # data_list_train = []
+        # for s in range(len(train_seq)):
+        #    for d in range(len(detector)):
+        #        print('Sequence: ' + train_seq[s])
+        #        detections, images_path = get_data([train_seq[s], detector[d]], "training")
+        #        list = data_prep_train(train_seq[s], detections, images_path, frames_look_back, total_frames[s],
+        #                               most_recent_frame_back,
+        #                               graph_jump, current_frame_train, current_frame_valid[s], distance_limit, fps[s],
+        #                               "training")
+        #        data_list_train = data_list_train + list
+        # with open('./data/data_train.data', 'wb') as filehandle:
+        #    pickle.dump(data_list_train, filehandle)
+        # print("Saved to pickle file \n")
+        # print('Validation Data')
+        # data_list_valid = []
+        # for s in range(len(valid_seq)):
+        #     for d in range(len(detector)):
+        #        print('Sequence: ' + valid_seq[s])
+        #        detections, images_path = get_data([valid_seq[s], detector[d]], "training")
+        #        list = data_prep_train(valid_seq[s], detections, images_path, frames_look_back, total_frames[s],
+        #                               most_recent_frame_back,
+        #                               graph_jump, current_frame_train, current_frame_valid[s], distance_limit, fps[s],
+        #                               "validation")
+        #        data_list_valid = data_list_valid + list
+        # with open('./data/data_valid.data', 'wb') as filehandle:
+        #    pickle.dump(data_list_valid, filehandle)
+        # print("Saved to pickle file \n")
 
         # Option 2: If data graph built, just import files
-         #with open('./data/data_train.data', 'rb') as filehandle:
-         #    data_list_train = pickle.load(filehandle)
-         #print("Loaded training pickle files")
-         #with open('./data/data_valid.data', 'rb') as filehandle:
-         #    data_list_valid = pickle.load(filehandle)
-         #print("Loaded validation pickle files")
-         ##Load and train
-        model_training(data_list_train, data_list_valid, epochs, acc_epoch, acc_epoch2, save_model_epochs, validation_epochs, batchsize, "logfile", load_checkpoint)
+        with open('./data/data_train.data', 'rb') as filehandle:
+            data_list_train = pickle.load(filehandle)
+        print("Loaded training pickle files")
+        with open('./data/data_valid.data', 'rb') as filehandle:
+            data_list_valid = pickle.load(filehandle)
+        print("Loaded validation pickle files")
+        # Load and train
+        model_training(data_list_train, data_list_valid, epochs, acc_epoch, acc_epoch2, save_model_epochs,
+                       validation_epochs, batchsize, "logfile", load_checkpoint)
 
     elif args.type == 'test':
 
@@ -127,7 +130,6 @@ if __name__ == "__main__":
         model = completeNet()
         device = torch.device('cuda')
         model = model.to(device)
-        model = DataParallel(model)
         model.load_state_dict(torch.load('./models/epoch_4.pth')['model_state_dict'])
         model.eval()
 
@@ -143,7 +145,8 @@ if __name__ == "__main__":
                     print('Sequence: ' + seq[s])
                     print('Total frames: ' + str(total_frames))
                     detections = sorted(detections, key=lambda x: x[0])
-                    tracking_output = model_testing(seq[s], detections, images_path, total_frames, frames_look_back, model,
+                    tracking_output = model_testing(seq[s], detections, images_path, total_frames, frames_look_back,
+                                                    model,
                                                     distance_limit, fp_min_times_seen, match_thres, det_conf_thres,
                                                     fp_look_back, fp_recent_frame_limit, min_height, fps[s])
                     # write output
