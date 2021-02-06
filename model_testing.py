@@ -1,4 +1,5 @@
-from torch_geometric.data import DataLoader, DataListLoader
+# from torch_geometric.data import DataLoader, DataListLoader
+from torch_geometric.data import DataLoader
 from build_graph import *
 from scipy.optimize import linear_sum_assignment
 import matplotlib.pyplot as plt
@@ -79,17 +80,20 @@ def model_testing(sequence, detections, images_path, total_frames, frames_look_b
                 break
         #build graph and run model
         data = build_graph(tracklets, current_detections, images_path, current_frame, distance_limit, fps, test=True)
+        data = data.to("cuda")
         if data:
             if current_detections and data.edge_attr.size()[0]!=0:
                 data_list.append(data)
 
-                loader = DataListLoader(data_list)
+                # loader = DataListLoader(data_list)
+                loader = DataLoader(data_list)
                 for graph_num, batch in enumerate(loader):
                     #MODEL FORWARD
                     output, output2, ground_truth, ground_truth2, det_num, tracklet_num= model(batch)
                     #FEATURE MAPS on tensorboard
                     #embedding
-                    images = batch[0].x
+                    # images = batch[0].x
+                    images = batch.x
                     images = F.interpolate(images, size=250)
                     edge_index= data_list[graph_num].edges_complete
                     #THRESHOLDS
