@@ -92,7 +92,7 @@ def model_testing(sequence, detections, images_path, total_frames, frames_look_b
                     output, output2, ground_truth, ground_truth2, det_num, tracklet_num= model(batch)
                     #FEATURE MAPS on tensorboard
                     #embedding
-                    # images = batch[0].x
+                    #images = batch[0].x
                     images = batch.x
                     images = F.interpolate(images, size=250)
                     edge_index= data_list[graph_num].edges_complete

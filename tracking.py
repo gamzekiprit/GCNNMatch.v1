@@ -53,6 +53,7 @@ if __name__ == "__main__":
         # MOT17 specific settings
         # train_seq = ["02"]  # , "04", "05", "09", "10", "11", "13"]  # names of videos
         train_seq = ["1702", "1704", "1711", "1713", "2002", "2003"]  # names of videos #1702 = MOT17-02-FRCNN, ..., 2002 = MOT20-02-FRCNN
+        # valid_seq = ["02"]  # names of videos
         valid_seq = ["1702", "1704", "1711", "1713", "2002", "2003"]  # names of videos
         # fps = [30, 30, 14, 30, 30, 30, 25]  # specify fps of each video
         fps = [30, 30, 30, 25, 25, 25]  # specify fps of each video
