@@ -136,3 +136,22 @@ dmypy.json
 
 # Cython debug symbols
 cython_debug/
+/filename.png
+
+# Videos and txt files
+output/
+
+# Epochs
+models/
+
+
+#
+.DS_Store
+
+.idea/
+
+LICENSE
+
+README.md
+
+logfiles/
