@@ -3,7 +3,7 @@ from utils import *
 from network.complete_net import *
 from torch_geometric.data import DataLoader
 from accuracy import *
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pltq
 import logging
 import sys
 import os
@@ -53,12 +53,19 @@ def model_training(data_list_train, data_list_test, epochs, acc_epoch, acc_epoch
             batch_correct_zeros= 0
             batches_num+=1
             # Forward-Backpropagation
-            output, output2, ground_truth, ground_truth2, det_num, tracklet_num= complete_net(batch)
-            optimizer.zero_grad()
-            loss = weighted_binary_cross_entropy(output, ground_truth, weights)
-            loss.backward()
-            optimizer.step()
-            ##Accuracy 
+            try:
+                output, output2, ground_truth, ground_truth2, det_num, tracklet_num= complete_net(batch)
+                optimizer.zero_grad()
+                loss = weighted_binary_cross_entropy(output, ground_truth, weights)
+                loss.backward()
+                optimizer.step()
+            except RuntimeError as e:
+                print(str(e))
+            # optimizer.zero_grad()
+            # loss = weighted_binary_cross_entropy(output, ground_truth, weights)
+            # loss.backward()
+            # optimizer.step()
+            ##Accuracy
             if epoch%acc_epoch==0 and epoch!=0:
                 # Hungarian method, clean up
                 cleaned_output= hungarian(output2, ground_truth2, det_num, tracklet_num)
