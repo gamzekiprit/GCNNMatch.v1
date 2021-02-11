@@ -11,7 +11,10 @@ from torchvision.transforms import ToTensor
 import networkx as nx
 import matplotlib.pyplot as plt
 from torch_geometric.utils.convert import to_networkx
-
+from datetime import datetime
+from networkx.algorithms import moral
+from networkx.algorithms.tree.decomposition import junction_tree
+from networkx.drawing.nx_agraph import graphviz_layout as layout
 
 def build_graph(tracklets, current_detections, images_path, current_frame, distance_limit, fps, test=True):
 
@@ -28,6 +31,7 @@ def build_graph(tracklets, current_detections, images_path, current_frame, dista
         frame = []
         coords_original = []
         transform= ToTensor()
+
         ####tracklet graphs
         for tracklet in tracklets:
             tracklet1= tracklet[-1]
@@ -108,7 +112,20 @@ def build_graph(tracklets, current_detections, images_path, current_frame, dista
                     edge_attr=frame_edge_attr, coords=frame_coords, coords_original= coords_original,
                     ground_truth=frame_ground_truth, idx=frame_idx, \
                     edges_number=frame_edges_number, frame=frame_frame, det_num= detections_frame, track_num= tracklets_frame, edges_complete= edges_complete)
-        #nx.draw(to_networkx(data,to_undirected=False),with_labels = True)
-        #plt.draw()
-        #plt.savefig("Graph.v3.png")
+        #build_graph_plot(data)
+
         return data
+
+def build_graph_plot(data):
+    #nx.draw(to_networkx(data, to_undirected=False), with_labels=True)
+    shells = [range(0,10), range(10,20), range(20,30), range(30,40), range(40,50), range(50,60), range(60,70) ]
+    graph = to_networkx(data, to_undirected=False, remove_self_loops=True)
+    nx.draw_shell(graph, nlist = shells, with_labels=True)
+    outfile = './graphbuild/graph-{}.jpg'.format(datetime.now())
+    plt.savefig(outfile)
+
+    A = nx.adjacency_matrix(graph)
+    print(A.todense())
+
+
+
