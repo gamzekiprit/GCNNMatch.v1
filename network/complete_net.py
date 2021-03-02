@@ -35,7 +35,7 @@ class completeNet(nn.Module):
         lam= torch.Tensor([5]).float().cuda()
         #Pass through GNN
         #print("Shape of x: " + str(x.shape))
-        node_embedding= self.cnn(x)
+        node_embedding = self.cnn(x)
         #print("Shape of node embedding: " + str(node_embedding.shape))
         edge_embedding = []
         edge_mlp= []

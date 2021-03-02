@@ -9,7 +9,7 @@ from random import randint
 from build_graph import *
 
 def data_prep_train(sequence, detections, images_path, frames_look_back, total_frames, most_recent_frame_back, graph_jump, current_frame_train, current_frame_valid, distance_limit, fps, type):
-
+    print("fps" + str(fps))
     if total_frames==None:
         total_frames= np.max(detections[:,0]) #change only if you want a subset of the total frames
     detections= sorted(detections, key = lambda x: x[0])
@@ -17,11 +17,11 @@ def data_prep_train(sequence, detections, images_path, frames_look_back, total_f
     edges_number_list= []
     acceptable_object_types= [1,2,7] # MOT specific types
     if type=="training":
-        total_frames= current_frame_valid
-        current_frame= current_frame_train
+        total_frames = current_frame_valid
+        current_frame = current_frame_train
     elif type=="validation":
-        total_frames= total_frames
-        current_frame= current_frame_valid
+        total_frames = total_frames
+        current_frame = current_frame_valid
 
     while current_frame<=total_frames:
 

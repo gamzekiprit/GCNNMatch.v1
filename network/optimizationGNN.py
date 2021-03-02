@@ -5,6 +5,7 @@ import os
 import numpy as np
 from torch_geometric.nn import MetaLayer
 from torch_geometric.nn import GCNConv
+from torch_geometric.nn import SGConv
 import torch.nn.functional as F
 import torch
 
@@ -13,7 +14,9 @@ class optimNet(nn.Module):
     def __init__(self):
         super(optimNet, self).__init__()
         self.conv1 = GCNConv(512, 512, improved=False, cached=False, bias=True)
+        #self.conv1 = SGConv(512, 512, K = 5, cached=False, bias=True)
         self.conv2 = GCNConv(512, 128, improved=False, cached=False, bias=True)
+        #self.conv2 = SGConv(512, 128, K = 5, cached=False, bias=True)
         self.mlp1 = nn.Sequential(
             nn.Linear(1024 , 1), #loads features from two nodes and features of their edge (edge of interest)
             nn.ReLU()
@@ -26,7 +29,6 @@ class optimNet(nn.Module):
             #print("output mlp1")
             edge_attr.append(x1.reshape(1))
         edge_attr = torch.stack(edge_attr)
-        #print("end of for")
         return edge_attr
     def forward(self, node_attr, edge_attr, edge_index, coords, frame):
         node_embedding= node_attr
@@ -38,6 +40,7 @@ class optimNet(nn.Module):
 
     def configure_input_size(self, shape):
         self.conv1 = GCNConv(shape, 512, improved=False, cached=False, bias=True)
+        #self.conv1 = SGConv(shape, 512, K = 5 , cached=False, bias=True)
         #self.mlp1 = nn.Sequential(
             #nn.Linear(shape*2, 1),  # loads features from two nodes and features of their edge (edge of interest)
             #nn.ReLU()

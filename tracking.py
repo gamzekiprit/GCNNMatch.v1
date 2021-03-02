@@ -39,7 +39,7 @@ if __name__ == "__main__":
         epochs = 4  # at how many epochs to stop
         load_checkpoint = None  # None or specify .pth file to continue training
         validation_epochs = 2  # epoch interval for validation
-        acc_epoch = 2  # at which epoch to calculate training accuracy
+        acc_epoch = 1  # at which epoch to calculate training accuracy
         acc_epoch2 = 2  # at which epoch to calculate validation accuracy
         save_model_epochs = 1  # epoch interval to save the model
         most_recent_frame_back = 30  # for more challenging training, specify most recent frame of tracklets to match new detections with, a max value is specified here
@@ -51,17 +51,19 @@ if __name__ == "__main__":
         distance_limit = 200  # objects within that pixel distance can be associated #250
 
         # MOT17 specific settings
-        # train_seq = ["02"]  # , "04", "05", "09", "10", "11", "13"]  # names of videos
-        train_seq = ["1702", "1704", "1711", "1713", "2002", "2003"]  # names of videos #1702 = MOT17-02-FRCNN, ..., 2002 = MOT20-02-FRCNN
-        # valid_seq = ["02"]  # names of videos
-        valid_seq = ["1702", "1704", "1711", "1713", "2002", "2003"]  # names of videos
-        # fps = [30, 30, 14, 30, 30, 30, 25]  # specify fps of each video
+        #train_seq = ["1713"]  # names of videos
+        #train_seq = ["1702", "1713", "2002", "2003"]  # names of videos #1702 = MOT17-02-FRCNN, ..., 2002 = MOT20-02-FRCNN
+        train_seq = ["1702", "1704", "1711" , "1713", "2001","2003"]  # names of videos #1702 = MOT17-02-FRCNN, ..., 2002 = MOT20-02-FRCNN
+        #valid_seq = ["1704"]  # names of videos
+        valid_seq = ["1702", "1704", "1711" , "1713", "2001","2003"]   # names of videos
         fps = [30, 30, 30, 25, 25, 25]  # specify fps of each video
+        #fps = [25]  # specify fps of each video
+        fps_valid = [30, 30, 30, 25, 25, 25] # specify fps of each video for validation
         current_frame_train = 2  # use as first current frame the second frame of each video
         total_frames = [None, None, None, None, None, None]  # total frames of each video loaded, None for max frames
         # total_frames = [None, None, None]  # total frames of each video loaded, None for max frames
         # current_frame_valid = [500, 900, 780, 450, 550, 800, 650]  # up to which frame of each video to use for training
-        current_frame_valid = [500, 700, 700, 600, 2050, 1800]  # up to which frame of each video to use for training
+        current_frame_valid = [500, 850, 800, 600, 379, 1900]  # up to which frame of each video to use for training
         detector = ["FRCNN"]  # specify a detector just to direct to one of the MOT folders
 
         # Option 1: If graph data not built, loop through sequence and get training data
@@ -88,8 +90,8 @@ if __name__ == "__main__":
                 detections, images_path = get_data([valid_seq[s], detector[d]], "training")
                 list = data_prep_train(valid_seq[s], detections, images_path, frames_look_back, total_frames[s],
                                        most_recent_frame_back,
-                                       graph_jump, current_frame_train, current_frame_valid[s], distance_limit, fps[s],
-                                       "validation")
+                                       graph_jump, current_frame_train, current_frame_valid[s], distance_limit, fps_valid[s],
+                                      "validation")
                 data_list_valid = data_list_valid + list
         with open('./data/data_valid.data', 'wb') as filehandle:
             pickle.dump(data_list_valid, filehandle)
@@ -105,7 +107,6 @@ if __name__ == "__main__":
         ## Load and train
         model_training(data_list_train, data_list_valid, epochs, acc_epoch, acc_epoch2, save_model_epochs,
                        validation_epochs, batchsize, "logfile", load_checkpoint)
-
     elif args.type == 'test':
 
         frames_look_back = 30  # how many previous frames to look back for tracklets to be matched
@@ -119,9 +120,11 @@ if __name__ == "__main__":
         # with the first instance seen before fp_recent_frame_limit otherwise considered false positive
 
         # Select sequence
-        # seq = ["01", "03", "06", "07", "08", "12", "14"]
-        seq = ["1705", "1709", "1710", "2001", "2005"]
-        fps = [14, 30, 30, 25, 25]
+        seq = ["1705","1709", "1710", "2002"]
+        #seq = ["2005"]
+        #fps = [14, 30, 30, 25, 25]
+        fps = [14,30,30,25]
+        #fps = [25]
         # detector = ["DPM", "FRCNN", "SDP"]
         detector = ["FRCNN"]
 

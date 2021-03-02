@@ -12,9 +12,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from torch_geometric.utils.convert import to_networkx
 from datetime import datetime
-from networkx.algorithms import moral
-from networkx.algorithms.tree.decomposition import junction_tree
-from networkx.drawing.nx_agraph import graphviz_layout as layout
+import statistics
+
 
 def build_graph(tracklets, current_detections, images_path, current_frame, distance_limit, fps, test=True):
 
@@ -31,8 +30,6 @@ def build_graph(tracklets, current_detections, images_path, current_frame, dista
         frame = []
         coords_original = []
         transform= ToTensor()
-
-        ####tracklet graphs
         for tracklet in tracklets:
             tracklet1= tracklet[-1]
             xmin, ymin, width, height = int(round(tracklet1[2])), int(round(tracklet1[3])), \
@@ -73,14 +70,14 @@ def build_graph(tracklets, current_detections, images_path, current_frame, dista
         k = 0
         for i in range(len(tracklets) + len(current_detections)):
             for j in range(len(tracklets) + len(current_detections)):
-                distance= ((coords_original[i][0]-coords_original[j][0])**2+(coords_original[i][1]-coords_original[j][1])**2)**0.5
+                distance = ((coords_original[i][0] - coords_original[j][0]) ** 2 + (coords_original[i][1] - coords_original[j][1]) ** 2) ** 0.5
                 if i < len(tracklets) and j >= len(tracklets):  # i is tracklet j is detection
                     # adjacency matrix
-                    if distance<distance_limit:
+                    if distance < distance_limit:
                         edges_first_row.append(i)
                         edges_second_row.append(j)
                         edge_attr.append([0.0])
-                    if test==True:
+                    if test == True:
                         edges_complete_first_row.append(i)
                         edges_complete_second_row.append(j)
                     if tracklets[i][-1][1] == current_detections[j - len(tracklets)][1]:
@@ -90,15 +87,25 @@ def build_graph(tracklets, current_detections, images_path, current_frame, dista
                     k += 1
                 elif i >= len(tracklets) and j < len(tracklets):  # j is tracklet i is detection
                     # adjacency matrix
-                    if distance<distance_limit:
+                    if distance < distance_limit:
                         edges_first_row.append(i)
                         edges_second_row.append(j)
                         edge_attr.append([0.0])
                     k += 1
+        while len(edge_attr)<=100 and test==False:
+            distance_limit += 50
+            compute_assignment(tracklets, current_detections, coords_original, distance_limit, edges_first_row,
+                               edges_second_row, edge_attr, test, edges_complete_first_row, edges_complete_second_row, k)
+        #while len(edge_attr)==0 and test==True:
+            #distance_limit += 100
+            #compute_assignment(tracklets, current_detections, coords_original, distance_limit, edges_first_row,
+                               #edges_second_row, edge_attr, test, edges_complete_first_row, edges_complete_second_row,
+                               #k)
         idx.append(current_frame - 2)
         frame_node_attr = torch.stack(node_attr)
         frame_edge_attr = torch.tensor(edge_attr, dtype=torch.float)
-        frame_edges_index = torch.tensor([edges_first_row, edges_second_row], dtype=torch.long)
+        #print("edge_Attr: " + str(len(edge_attr)))
+        frame_edges_index = torch.tensor([edges_first_row, edges_second_row], dtype=torch.int64)
         frame_coords = torch.tensor(coords, dtype=torch.float)
         frame_ground_truth = torch.tensor(ground_truth, dtype=torch.float)
         frame_idx = torch.tensor(idx, dtype=torch.float)
@@ -117,15 +124,40 @@ def build_graph(tracklets, current_detections, images_path, current_frame, dista
         return data
 
 def build_graph_plot(data):
-    #nx.draw(to_networkx(data, to_undirected=False), with_labels=True)
-    shells = [range(0,10), range(10,20), range(20,30), range(30,40), range(40,50), range(50,60), range(60,70) ]
+    # nx.draw(to_networkx(data, to_undirected=False), with_labels=True)
+    shells = [range(0, 10), range(10, 20), range(20, 30), range(30, 40), range(40, 50), range(50, 60), range(60, 70)]
     graph = to_networkx(data, to_undirected=False, remove_self_loops=True)
-    nx.draw_shell(graph, nlist = shells, with_labels=True)
+    nx.draw_shell(graph, nlist=shells, with_labels=True)
     outfile = './graphbuild/graph-{}.jpg'.format(datetime.now())
     plt.savefig(outfile)
 
-    A = nx.adjacency_matrix(graph)
-    print(A.todense())
 
+    #A = nx.adjacency_matrix(graph)
+    #print(A.todense())
 
-
+def compute_assignment(tracklets, current_detections, coords_original, distance_limit, edges_first_row, edges_second_row, edge_attr, test, edges_complete_first_row, edges_complete_second_row, k):
+        ground_truth = []
+        for i in range(len(tracklets) + len(current_detections)):
+            for j in range(len(tracklets) + len(current_detections)):
+                distance = ((coords_original[i][0] - coords_original[j][0]) ** 2 + (coords_original[i][1] - coords_original[j][1]) ** 2) ** 0.5
+                if i < len(tracklets) and j >= len(tracklets):  # i is tracklet j is detection
+                    # adjacency matrix
+                    if distance < distance_limit:
+                        edges_first_row.append(i)
+                        edges_second_row.append(j)
+                        edge_attr.append([0.0])
+                    if test == True:
+                        edges_complete_first_row.append(i)
+                        edges_complete_second_row.append(j)
+                    if tracklets[i][-1][1] == current_detections[j - len(tracklets)][1]:
+                        ground_truth.append(1.0)
+                    else:
+                        ground_truth.append(0.0)
+                    k += 1
+                elif i >= len(tracklets) and j < len(tracklets):  # j is tracklet i is detection
+                    # adjacency matrix
+                    if distance < distance_limit:
+                        edges_first_row.append(i)
+                        edges_second_row.append(j)
+                        edge_attr.append([0.0])
+                    k += 1

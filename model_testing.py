@@ -11,7 +11,6 @@ import tensorboard as tb
 import keyword
 from torchvision.transforms import ToTensor
 from utils import *
-import datetime
 
 def model_testing(sequence, detections, images_path, total_frames, frames_look_back, model, distance_limit, fp_min_times_seen, match_thres, det_conf_thres, fp_look_back, fp_recent_frame_limit,min_height,fps):
 

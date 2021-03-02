@@ -147,16 +147,15 @@ models/
 
 #
 .DS_Store
-#
-.idea/
-#
-LICENSE
-#
-README.md
-#
-logfiles/
-#
-singularity
-#
-Seqmap.txt
 
+.idea/
+
+LICENSE
+
+README.md
+
+singularity
+
+graphbuild/
+
+logfiles/

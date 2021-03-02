@@ -8,7 +8,7 @@ class EncoderCNN(nn.Module):
         super(EncoderCNN, self).__init__()
         # get the pretrained densenet model
         # initial_cnn = models.densenet121(pretrained=True)
-        initial_cnn = models.resnet18(pretrained=True)
+        initial_cnn = models.resnet34(pretrained=True)
         self.cnn = torch.nn.Sequential(*(list(initial_cnn.children())[:-1]))
         # Freeze model weights
         #print(self.cnn.parameters())

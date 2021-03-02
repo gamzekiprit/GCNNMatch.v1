@@ -53,18 +53,11 @@ def model_training(data_list_train, data_list_test, epochs, acc_epoch, acc_epoch
             batch_correct_zeros= 0
             batches_num+=1
             # Forward-Backpropagation
-            try:
-                output, output2, ground_truth, ground_truth2, det_num, tracklet_num= complete_net(batch)
-                optimizer.zero_grad()
-                loss = weighted_binary_cross_entropy(output, ground_truth, weights)
-                loss.backward()
-                optimizer.step()
-            except RuntimeError as e:
-                print(str(e))
-            # optimizer.zero_grad()
-            # loss = weighted_binary_cross_entropy(output, ground_truth, weights)
-            # loss.backward()
-            # optimizer.step()
+            output, output2, ground_truth, ground_truth2, det_num, tracklet_num = complete_net(batch)
+            optimizer.zero_grad()
+            loss = weighted_binary_cross_entropy(output, ground_truth, weights)
+            loss.backward()
+            optimizer.step()
             ##Accuracy
             if epoch%acc_epoch==0 and epoch!=0:
                 # Hungarian method, clean up
